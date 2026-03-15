@@ -9,7 +9,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 
 // Load environment variables from .env file
-dotenv.config({ path: require("path").resolve(__dirname, ".env") });
+dotenv.config();
 
 // Connect to MongoDB
 connectDB();
@@ -29,12 +29,15 @@ app.use(
 );
 
 // ─── Routes ────────────────────────────────────────────────
-// Mount auth routes under /api/auth
+// Module 1 — Authentication
 app.use("/api/auth", authRoutes);
+
+// Module 2 — Patient Health Records
+app.use("/api/records", require("./routes/healthRecordRoutes"));
 
 // ─── Health Check ──────────────────────────────────────────
 app.get("/", (req, res) => {
-  res.json({ message: "Telehealth API is running ✅" });
+  res.json({ message: "Telehealth API is running" });
 });
 
 // ─── Global Error Handler ──────────────────────────────────
@@ -47,5 +50,5 @@ app.use((err, req, res, next) => {
 // ─── Start Server ──────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
