@@ -1,121 +1,172 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// ============================================================
+// App.jsx — Root component with all routes including landing page
+// ============================================================
 
-function App() {
-  const [count, setCount] = useState(0)
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
+import Navbar         from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// ─── Eagerly loaded ───────────────────────────────────────
+import Login    from "./pages/Login";
+import Register from "./pages/Register";
+import Home     from "./pages/Home";
+
+// ─── Lazy loaded — Patient pages ─────────────────────────
+const PatientDashboard    = lazy(() => import("./pages/PatientDashboard"));
+const SymptomChecker      = lazy(() => import("./pages/SymptomChecker"));
+const MedicineSearch      = lazy(() => import("./pages/MedicineSearch"));
+const HealthRecordForm    = lazy(() => import("./components/HealthRecordForm"));
+const ConsultationRequest = lazy(() => import("./components/ConsultationRequest"));
+
+// ─── Lazy loaded — Doctor pages ───────────────────────────
+const DoctorDashboard  = lazy(() => import("./pages/DoctorDashboard"));
+const ConsultationRoom = lazy(() => import("./pages/ConsultationRoom"));
+
+// ─── Lazy loaded — Pharmacy pages ────────────────────────
+const PharmacyDashboard = lazy(() => import("./pages/PharmacyDashboard"));
+
+// ─── Lazy loaded — Rural Accessibility ───────────────────
+const EmergencyMode         = lazy(() => import("./components/EmergencyMode"));
+const OfflineSymptomChecker = lazy(() => import("./components/OfflineSymptomChecker"));
+const TextConsultation      = lazy(() => import("./components/TextConsultation"));
+
+// ─── Loading spinner ──────────────────────────────────────
+const PageLoader = () => (
+  <div style={{
+    minHeight: "60vh", display: "flex", alignItems: "center",
+    justifyContent: "center", fontFamily: "'DM Sans', sans-serif",
+    color: "#4a7a5a", fontSize: "14px", gap: "10px",
+  }}>
+    <span style={{
+      display: "inline-block", width: "18px", height: "18px",
+      border: "2px solid #c8e0d0", borderTopColor: "#2d7a4f",
+      borderRadius: "50%", animation: "spin 0.7s linear infinite",
+    }} />
+    Loading…
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
+// ─── Auth redirect for logged-in users ───────────────────
+// If user visits / and is already logged in → go to their dashboard
+const HomeOrDashboard = () => {
+  const token   = localStorage.getItem("telehealth_token");
+  const userRaw = localStorage.getItem("telehealth_user");
+  const user    = userRaw ? JSON.parse(userRaw) : null;
+
+  if (token && user) {
+    const paths = {
+      patient:  "/patient-dashboard",
+      doctor:   "/doctor-dashboard",
+      pharmacy: "/pharmacy-dashboard",
+    };
+    return <Navigate to={paths[user.role] || "/login"} replace />;
+  }
+
+  // Not logged in → show landing page
+  return <Home />;
+};
+
+// ─── 404 ─────────────────────────────────────────────────
+const NotFound = () => (
+  <div style={{
+    textAlign: "center", padding: "80px 20px",
+    fontFamily: "'DM Sans', sans-serif", color: "#4a6a5a",
+  }}>
+    <p style={{ fontSize: "56px", margin: "0 0 8px", fontFamily: "'DM Serif Display', serif" }}>404</p>
+    <p style={{ fontSize: "16px", marginBottom: "20px" }}>Page not found.</p>
+    <a href="/" style={{ color: "#2d7a4f", fontWeight: 500 }}>← Go home</a>
+  </div>
+);
+
+// ============================================================
+// App
+// ============================================================
+const App = () => {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <BrowserRouter>
+      <Navbar />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
 
-      <div className="ticks"></div>
+          {/* ── Landing / Home ─────────────────────────────── */}
+          {/* Shows landing page for guests, redirects to dashboard for logged-in users */}
+          <Route path="/" element={<HomeOrDashboard />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* ── Public routes ──────────────────────────────── */}
+          <Route path="/login"    element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+          {/* Emergency — public, no login needed */}
+          <Route path="/emergency" element={<EmergencyMode />} />
 
-export default App
+          {/* ── Patient routes ─────────────────────────────── */}
+          <Route path="/patient-dashboard" element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <PatientDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/health-record" element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <HealthRecordForm onBack={() => window.history.back()} />
+            </ProtectedRoute>
+          } />
+          <Route path="/symptom-checker" element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <SymptomChecker />
+            </ProtectedRoute>
+          } />
+          <Route path="/symptom-checker-offline" element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <OfflineSymptomChecker />
+            </ProtectedRoute>
+          } />
+          <Route path="/consultation-request" element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <ConsultationRequest />
+            </ProtectedRoute>
+          } />
+          <Route path="/medicine-search" element={
+            <ProtectedRoute allowedRoles={["patient"]}>
+              <MedicineSearch />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Doctor routes ──────────────────────────────── */}
+          <Route path="/doctor-dashboard" element={
+            <ProtectedRoute allowedRoles={["doctor"]}>
+              <DoctorDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Shared — Consultation room ─────────────────── */}
+          <Route path="/consultation/:consultationId" element={
+            <ProtectedRoute allowedRoles={["doctor", "patient"]}>
+              <ConsultationRoom />
+            </ProtectedRoute>
+          } />
+          <Route path="/consultation/:consultationId/chat" element={
+            <ProtectedRoute allowedRoles={["doctor", "patient"]}>
+              <TextConsultation />
+            </ProtectedRoute>
+          } />
+
+          {/* ── Pharmacy routes ────────────────────────────── */}
+          <Route path="/pharmacy-dashboard" element={
+            <ProtectedRoute allowedRoles={["pharmacy"]}>
+              <PharmacyDashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* ── 404 ────────────────────────────────────────── */}
+          <Route path="*" element={<NotFound />} />
+
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+};
+
+export default App;

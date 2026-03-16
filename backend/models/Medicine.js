@@ -94,9 +94,6 @@ const MedicineSchema = new mongoose.Schema(
 MedicineSchema.index({ name: "text" });
 
 // Compound index for pharmacy inventory lookups
-MedicineSchema.index({ pharmacyId: 1, name: 1 });
-
-// Unique constraint: a pharmacy can only have one record per medicine name
 MedicineSchema.index({ pharmacyId: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Medicine", MedicineSchema);
