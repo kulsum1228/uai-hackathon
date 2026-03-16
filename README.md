@@ -390,4 +390,8 @@ This project is licensed under the MIT License.
 <div align="center">
   <strong>Built for UAI Hackathon 2026</strong><br/>
   Making healthcare accessible for every community
+<<<<<<< HEAD
 </div>
+=======
+</div>
+>>>>>>> 83142315d5dfd577819b364ad47f2db9f9a5fa66
