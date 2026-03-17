@@ -137,20 +137,43 @@ const PatientDashboard = () => {
   const [activeConsultations, setActiveConsultations] = useState([]);
 
   // ── Fetch active (accepted) consultations on mount ──────
-  useEffect(() => {
-    const fetchConsultations = async () => {
-      try {
-        const res = await consultationAPI.getByPatient(user._id);
-        const all = res.data.consultations || [];
-        // Show only accepted consultations — these are ready to join
-        setActiveConsultations(all.filter((c) => c.status === "accepted"));
-      } catch {
-        // Silent fail — dashboard still works without this
-      }
-    };
-    if (user._id) fetchConsultations();
-  }, []);
+  // useEffect(() => {
+  //   const fetchConsultations = async () => {
+  //     try {
+  //       const res = await consultationAPI.getByPatient(user._id);
+  //       const all = res.data.consultations || [];
+  //       // Show only accepted consultations — these are ready to join
+  //       setActiveConsultations(all.filter((c) => c.status === "accepted"));
+  //     } catch {
+  //       // Silent fail — dashboard still works without this
+  //     }
+  //   };
+  //   if (user._id) fetchConsultations();
+  // }, []);
 
+  useEffect(() => {
+  const fetchConsultations = async () => {
+    try {
+      const res = await consultationAPI.getByPatient(user._id);
+      const all = res.data.consultations || [];
+      setActiveConsultations(
+        all.filter((c) => c.status === "accepted")
+      );
+    } catch (err) {
+      console.log("Error fetching consultations");
+    }
+  };
+
+  if (user._id) {
+    fetchConsultations();
+
+    // ⏱️ Poll every 5 seconds
+    const interval = setInterval(fetchConsultations, 5000);
+
+    // 🧹 Cleanup
+    return () => clearInterval(interval);
+  }
+}, [user._id]);
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-IN", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
